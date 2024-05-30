@@ -1,0 +1,35 @@
+# Use an official Python runtime as a base image
+FROM python:3.10-buster
+
+ENV LANGUAGE=C.UTF-8 LC_ALL=C.UTF-8 LANG=C.UTF-8
+ENV GCSFUSE_REPO gcsfuse-stretch
+
+
+RUN mkdir -p /app
+
+RUN apt-get -y update && apt-get install -y vim netcat bash make curl tini wget cmake build-essential libsm6 libxext6 libxrender-dev libglib2.0-0 alien
+COPY oracle-instantclient12.2-basic-12.2.0.1.0-1.x86_64.rpm /opt
+
+#convert to .deb
+#WORKDIR /opt
+RUN alien -d /opt/oracle-instantclient12.2-basic-12.2.0.1.0-1.x86_64.rpm
+
+# Clean up
+# RUN rm /opt/oracle-instantclient12.2-basic-12.2.0.1.0-1.x86_64.rpm && \
+#     apt-get purge -y alien && \
+#     apt-get autoremove -y && \
+#     apt-get clean && \
+#     rm -rf /var/lib/apt/lists/*
+RUN dpkg -i oracle-instantclient12.2-basic_12.2.0.1.0-2_amd64.deb
+RUN chmod -R 755 /var/cache/man/
+RUN apt-get -y update && apt-get install -y libaio1 libaio-dev
+RUN ln -s /usr/lib/oracle/12.2/client64/lib/libclntsh.so.12.1 /usr/lib/oracle/12.2/client64/lib/libclntsh.so
+RUN export LD_LIBRARY_PATH=/usr/lib/oracle/12.2/client64/lib/libclntsh.so.12.1${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
+RUN ldconfig
+
+# Set environment variables
+#NV LD_LIBRARY_PATH=/opt/instantclient_12_2:$LD_LIBRARY_PATH
+#ENV PATH=/opt/instantclient_12_2:$PATH
+COPY requirements.txt /app
+WORKDIR /app
+RUN pip install --upgrade pip setuptools && pip install -r requirements.txt
