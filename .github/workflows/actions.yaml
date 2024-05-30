@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - main  # Trigger the action on push to main branch
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #TF_ACTION_WORKING_DIR: 'k8s-gatekeeper'
+  AWS_ACCESS_KEY_ID:  ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY:  ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
 jobs:
   build-and-push:
@@ -17,8 +22,8 @@ jobs:
         run: |
           aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/s5z6s7v5
         env:
-          AWS_ACCESS_KEY_ID: AKIAZN2VXWQ3YNYXNL7L
-          AWS_SECRET_ACCESS_KEY: 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
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
       - name: Build Docker image
         run: docker build -t python-base .
